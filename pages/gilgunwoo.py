@@ -165,9 +165,9 @@ def initialize_vector_store():
     retriever = create_retriever_tool(
         ensemble_retriever, 
         name="retriever_tool",
-        description="김알밥의 강의 스크립트 중 일부입니다."
+        description="길건우의 강의 스크립트 중 일부입니다."
                     "상대방의 질문 내용 혹은 상황과 가장 연관이 있는 강의 내용을 찾을 때 사용해주세요."
-                    "실제 김알밥의 생각을 참고하기 위해 본 도구를 적극적으로 활용하세요"
+                    "실제 길건우의 생각을 참고하기 위해 본 도구를 적극적으로 활용하세요"
     )
 
     return retriever, vector_store, ensemble_retriever
@@ -229,7 +229,7 @@ def relevance_check(state: GraphState) -> GraphState:
 
 def handle_error(error: Exception):
     if isinstance(error, (OutputParserException,GraphRecursionError)):
-        return {"answer": "죄송해요. 해당 질문에 대한 답변은 챗봇인 제가 갖고 있는 정보 안에서는 답변을 드리기 힘들어요."}
+        return {"answer": "죄송합니다. 해당 질문에 대한 답변은 챗봇인 제가 갖고 있는 정보 안에서는 답변을 드리기가 어렵습니다."}
     raise error
 
 # 관련성 체크 결과를 반환합니다.
