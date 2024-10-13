@@ -9,7 +9,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import TextLoader
 from langchain_community.vectorstores import FAISS
 from langchain.tools.retriever import create_retriever_tool
-from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from langchain_openai import ChatOpenAI
 from docx import Document as DocxDocument
 from langchain.schema import Document
 import streamlit as st
@@ -19,11 +19,9 @@ from langchain_anthropic import ChatAnthropic
 from langgraph.graph import END, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
 from langchain_core.runnables import RunnableConfig
-from langchain.chains.openai_functions import create_structured_output_runnable
 from langchain.retrievers import BM25Retriever, EnsembleRetriever
 from langchain.schema.output_parser import OutputParserException
 from langgraph.errors import GraphRecursionError
-from langchain.document_loaders import UnstructuredWordDocumentLoader
 
 # ... 기존 코드 ...
 from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler
@@ -134,7 +132,7 @@ def split_text_with_titles(docs, chunk_size=700, chunk_overlap=50):
     return chunks
 
 
-def initialize_vector_store():
+def initialize_gilgunwoo_vector_store():
     vector_store_path = "gilgunwoo_faiss_store_realese.index"
     if os.path.exists(vector_store_path):
         print("Loading vector store from file...")
@@ -159,7 +157,7 @@ def initialize_vector_store():
 
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, faiss_retriever],
-        weights=[0.5, 0.5]
+        weights=[0.3, 0.7]
     )
 
     retriever = create_retriever_tool(
@@ -188,8 +186,6 @@ upstage_ground_checker = UpstageGroundednessCheck()
 def retrieve_document(state: GraphState) -> GraphState:
     # Question 에 대한 문서 검색을 retriever 로 수행합니다.
     retrieved_docs = retriever_tool.invoke(state["question"])
-    print(retrieved_docs)
-    # 검색된 문서를 context 키에 저장합니다.
     return GraphState(context=retrieved_docs)
 
 
@@ -243,7 +239,7 @@ def is_relevant(state: GraphState) -> GraphState:
 
 st.set_page_config(page_title="채팅 인터페이스", page_icon=":speech_balloon:", initial_sidebar_state="collapsed")
 
-@st.cache_resource
+
 def setup_workflow():
     # langgraph.graph에서 StateGraph와 END를 가져옵니다.
     workflow = StateGraph(GraphState)
@@ -309,16 +305,14 @@ if 'gilgunwoo_chat_history' not in st.session_state:
 
 
 if 'retriever_tool' not in st.session_state:
-    st.session_state.retriever_tool, st.session_state.vector_store, st.session_state.es_bm25 = initialize_vector_store()
+    st.session_state.gilgunwoo_retriever_tool, st.session_state.gilgunwoo_vector_store, st.session_state.gilgunwoo_es_bm25 = initialize_gilgunwoo_vector_store()
 
-retriever_tool = st.session_state.retriever_tool
-vector_store = st.session_state.vector_store
-es_bm25 = st.session_state.es_bm25
+retriever_tool = st.session_state.gilgunwoo_retriever_tool
 
 # 채팅 인터페이스
 st.title("길건우 대표와의 채팅")
 st.sidebar.empty()
-for message in st.session_state.chat_history:
+for message in st.session_state.gilgunwoo_chat_history:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
@@ -329,10 +323,10 @@ if prompt := st.chat_input("메시지를 입력하세요."):
         st.markdown(prompt)
 
     # 컨텍스트 검색
-    context_docs = st.session_state.retriever_tool.invoke(prompt)
+    context_docs = st.session_state.gilgunwoo_retriever_tool.invoke(prompt)
 
     # 채팅 기록을 문자열로 변환
-    chat_history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.chat_history])
+    chat_history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.gilgunwoo_chat_history])
 
     # recursion_limit: 최대 반복 횟수, thread_id: 실행 ID (구분용)
     #config = RunnableConfig(recursion_limit=5, configurable={"thread_id": "SELF-RAG"})

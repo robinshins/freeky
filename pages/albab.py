@@ -156,7 +156,7 @@ def initialize_vector_store():
 
     ensemble_retriever = EnsembleRetriever(
         retrievers=[bm25_retriever, faiss_retriever],
-        weights=[0.5, 0.5]
+        weights=[0.3, 0.7]
     )
 
     retriever = create_retriever_tool(
@@ -185,7 +185,6 @@ upstage_ground_checker = UpstageGroundednessCheck()
 def retrieve_document(state: GraphState) -> GraphState:
     # Question 에 대한 문서 검색을 retriever 로 수행합니다.
     retrieved_docs = retriever_tool.invoke(state["question"])
-    print(retrieved_docs)
     # 검색된 문서를 context 키에 저장합니다.
     return GraphState(context=retrieved_docs)
 
@@ -240,7 +239,6 @@ def is_relevant(state: GraphState) -> GraphState:
 
 st.set_page_config(page_title="채팅 인터페이스", page_icon=":speech_balloon:", initial_sidebar_state="collapsed")
 
-@st.cache_resource
 def setup_workflow():
     # langgraph.graph에서 StateGraph와 END를 가져옵니다.
     workflow = StateGraph(GraphState)
@@ -306,16 +304,14 @@ if 'albab_chat_history' not in st.session_state:
 
 
 if 'retriever_tool' not in st.session_state:
-    st.session_state.retriever_tool, st.session_state.vector_store, st.session_state.es_bm25 = initialize_vector_store()
+    st.session_state.albab_retriever_tool, st.session_state.albab_vector_store, st.session_state.albab_es_bm25 = initialize_vector_store()
 
-retriever_tool = st.session_state.retriever_tool
-vector_store = st.session_state.vector_store
-es_bm25 = st.session_state.es_bm25
+retriever_tool = st.session_state.albab_retriever_tool
 
 # 채팅 인터페이스
 st.title("김알밥과의 채팅")
 st.sidebar.empty()
-for message in st.session_state.chat_history:
+for message in st.session_state.albab_chat_history:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
@@ -326,10 +322,10 @@ if prompt := st.chat_input("메시지를 입력하세요."):
         st.markdown(prompt)
 
     # 컨텍스트 검색
-    context_docs = st.session_state.retriever_tool.invoke(prompt)
+    context_docs = st.session_state.albab_retriever_tool.invoke(prompt)
 
     # 채팅 기록을 문자열로 변환
-    chat_history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.chat_history])
+    chat_history_str = "\n".join([f"{msg['role']}: {msg['content']}" for msg in st.session_state.albab_chat_history])
 
     # recursion_limit: 최대 반복 횟수, thread_id: 실행 ID (구분용)
     #config = RunnableConfig(recursion_limit=5, configurable={"thread_id": "SELF-RAG"})
@@ -350,6 +346,7 @@ if prompt := st.chat_input("메시지를 입력하세요."):
         if ':' in processed_response:
             processed_response = processed_response.split(':', 1)[1].strip()
     except Exception as e:
+        print(e)
         # 오류 발생 시 handle_error 함수의 결과를 사용
         error_response = handle_error(e)
         processed_response = error_response["answer"]
