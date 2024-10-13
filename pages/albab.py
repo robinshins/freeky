@@ -330,7 +330,7 @@ if prompt := st.chat_input("메시지를 입력하세요."):
     # recursion_limit: 최대 반복 횟수, thread_id: 실행 ID (구분용)
     #config = RunnableConfig(recursion_limit=5, configurable={"thread_id": "SELF-RAG"})
     config = RunnableConfig(
-    recursion_limit=5,
+    recursion_limit=9,
     configurable={"thread_id": "SELF-RAG"},
     callbacks=[StreamingStdOutCallbackHandler()],
     on_exception=handle_error
