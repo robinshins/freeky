@@ -304,8 +304,9 @@ print("재실행")
 
 
 # 세션 상태 초기화
-if 'chat_history' not in st.session_state:
-    st.session_state.chat_history = []
+if 'gilgunwoo_chat_history' not in st.session_state:
+    st.session_state.gilgunwoo_chat_history = []
+
 
 if 'retriever_tool' not in st.session_state:
     st.session_state.retriever_tool, st.session_state.vector_store, st.session_state.es_bm25 = initialize_vector_store()
@@ -323,7 +324,7 @@ for message in st.session_state.chat_history:
 
 if prompt := st.chat_input("메시지를 입력하세요."):
     # 사용자 메시지를 즉시 표시
-    st.session_state.chat_history.append({"role": "user", "content": prompt})
+    st.session_state.gilgunwoo_chat_history.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
@@ -357,7 +358,7 @@ if prompt := st.chat_input("메시지를 입력하세요."):
         processed_response = error_response["answer"]
     
     # 응답을 채팅 기록에 추가하고 표시
-    st.session_state.chat_history.append({"role": "assistant", "content": processed_response})
+    st.session_state.gilgunwoo_chat_history.append({"role": "assistant", "content": processed_response})
     with st.chat_message("assistant"):
         st.markdown(processed_response)
     
